@@ -2794,11 +2794,15 @@ static ssize_t hidpp_ff_range_store(struct device *dev, struct device_attribute 
 	struct hidpp_ff_private_data *data = idev->ff->private;
 	u8 params[2];
 	int range = simple_strtoul(buf, NULL, 10);
-
-	if (hid->product == USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL)
+	
+	switch (hid->product) {
+	case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
+	case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
 		range = clamp(range, 180, 1080);
-	else
+		break;
+	default:
 		range = clamp(range, 180, 900);
+	}		
 
 	params[0] = range >> 8;
 	params[1] = range & 0x00FF;
@@ -3497,10 +3501,15 @@ static int g920_get_config(struct hidpp_device *hidpp,
 		hid_warn(hidpp->hid_dev,
 			 "Failed to read range from device!\n");
 	}
-	if (hidpp->hid_dev->product == USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL)
+
+	switch (hidpp->hid_dev->product) {
+	case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
+	case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
 		max_angle = 1080;
-	else
+		break;
+	default:
 		max_angle = 900;
+	}		
 
 	data->range = ret ?
 		max_angle : get_unaligned_be16(&response.fap.params[0]);
@@ -3843,15 +3852,19 @@ static int hidpp_input_mapped(struct hid_device *hdev, struct hid_input *hi,
 {
 	struct hidpp_device *hidpp = hid_get_drvdata(hdev);
 
-	/* Input interface on G Pro Xbox and G Pro in G923 compatibility mode
-	 * is different from HIDPP interface, and we do not have information
-	 * about hidpp quirks here
+	/* Input interface for G Pro PC, G Pro Xbox and both in G923 compatibility
+	 * mode is different from HIDPP interface, and we do not have information
+	 * about hidpp quirks here.
+	 * Ensure that they are not given a default fuzz/flat value.
 	*/
-	if (hdev->product == USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL ||
-		hdev->product == USB_DEVICE_ID_LOGITECH_G923_XBOX_WHEEL) {
+	switch (hdev->product) {
+	case USB_DEVICE_ID_LOGITECH_G923_XBOX_WHEEL:
+	case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
+	case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
 		hidpp_input_setup_wheel(hdev, field, usage);
+		break;
 	}
-	
+
 	if (!hidpp)
 		return 0;
 
@@ -4688,6 +4701,9 @@ static const struct hid_device_id hidpp_devices[] = {
 	{ /* Logitech G923 Wheel (Xbox version) over USB */
 	  HID_USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_G923_XBOX_WHEEL),
 		.driver_data = HIDPP_QUIRK_CLASS_G920 | HIDPP_QUIRK_FORCE_OUTPUT_REPORTS },
+	{ /* Logitech G PRO Wheel (PC version) over USB */
+	  HID_USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL),
+		.driver_data = HIDPP_QUIRK_CLASS_G920 },
 	{ /* Logitech G PRO Wheel (Xbox version) over USB */
 	  HID_USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL),
 		.driver_data = HIDPP_QUIRK_CLASS_G920 },
