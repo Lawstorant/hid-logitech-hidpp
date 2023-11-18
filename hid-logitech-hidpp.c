@@ -2846,10 +2846,10 @@ static int hidpp_ff_init(struct hidpp_device *hidpp,
 
 	//   Try to find inputs on boot interface if we have ffb initialization
 	// not on the first interface (G Pro Wheel for example)
-	iface = to_usb_interface(hid->dev.parent);
-	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920 && 
-		iface->cur_altsetting->desc.bInterfaceNumber != 0)
-		hid = usb_get_intfdata(usb_ifnum_to_if(hid_to_usb_dev(hid), 0));
+	// iface = to_usb_interface(hid->dev.parent);
+	// if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920 && 
+	// 	iface->cur_altsetting->desc.bInterfaceNumber != 0)
+	// 	hid = usb_get_intfdata(usb_ifnum_to_if(hid_to_usb_dev(hid), 0));
 
 	if (list_empty(&hid->inputs)) {
 		hid_err(hid, "no inputs found\n");
@@ -3857,13 +3857,13 @@ static int hidpp_input_mapped(struct hid_device *hdev, struct hid_input *hi,
 	 * about hidpp quirks here.
 	 * Ensure that they are not given a default fuzz/flat value.
 	*/
-	switch (hdev->product) {
-	case USB_DEVICE_ID_LOGITECH_G923_XBOX_WHEEL:
-	case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
-	case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
-		hidpp_input_setup_wheel(hdev, field, usage);
-		break;
-	}
+	// switch (hdev->product) {
+	// case USB_DEVICE_ID_LOGITECH_G923_XBOX_WHEEL:
+	// case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
+	// case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
+	// 	hidpp_input_setup_wheel(hdev, field, usage);
+	// 	break;
+	// }
 
 	if (!hidpp)
 		return 0;
