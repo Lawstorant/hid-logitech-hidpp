@@ -3660,7 +3660,7 @@ static void hidpp10_extra_mouse_buttons_populate_input(
 
 /* Find the consumer-page input report desc and change Maximums to 0x107f */
 static u8 *hidpp10_consumer_keys_report_fixup(struct hidpp_device *hidpp,
-					      u8 *_rdesc, unsigned int *rsize)
+						u8 *_rdesc, unsigned int *rsize)
 {
 	/* Note 0 terminated so we can use strnstr to search for this. */
 	static const char consumer_rdesc_start[] = {
@@ -3683,6 +3683,69 @@ static u8 *hidpp10_consumer_keys_report_fixup(struct hidpp_device *hidpp,
 		consumer_rdesc[16] = 0x10;
 		consumer_rdesc[20] = 0x7f;
 		consumer_rdesc[21] = 0x10;
+	}
+	return _rdesc;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Logitech G Pro Racing Wheel with broken descriptor                         */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * FW wrongly reports axis Y as axis Z
+ * slider0 and slider1 are swapped
+ * Axis Z is missing
+*/
+static u8 *g_pro_axis_report_fixup(struct hid_device *hidpp, u8 *_rdesc,
+				     			unsigned int *rsize)
+{	
+	u8 *new_rdesc;
+	unsigned int new_size = 103;
+
+	/* Allocate more memory to account for the missing Z axis */
+	if (*rsize == 101) {
+		new_rdesc = devm_kzalloc(&hidpp->dev, new_size, GFP_KERNEL);
+		if (new_rdesc == NULL)
+			return _rdesc;
+	} else {
+		return _rdesc;
+	}
+	
+	/* Note Axis Z */
+	static const char axis_z[] = {
+		0x09, 0x32, // USAGE (Z)
+		0x00
+	};
+
+	/* Note Dial (last reported axis) */
+	static const char dial[] = {
+		0x09, 0x37, // USAGE (Dial)
+		0x00
+	};
+
+	char *rdesc_axis_z, *rdesc_dial, *rd = (char *)_rdesc;
+	unsigned int z_axis_offset;
+
+	rdesc_axis_z = strnstr(rd, axis_z, *rsize);
+	rdesc_dial = strnstr(rd, dial, *rsize);
+	z_axis_offset = (rdesc_dial - rd) + 2;
+
+	if (rdesc_axis_z && rdesc_dial) {
+		/* Change Z axis to Y axis */
+		rdesc_axis_z[1] = 0x31;
+
+		/* Swap around sliders */
+		rdesc_axis_z[3] = 0x37;
+		rdesc_axis_z[5] = 0x36;
+
+		/* Add missing Z axis */
+		memcpy(new_rdesc, rd, z_axis_offset);
+		memcpy(new_rdesc + z_axis_offset, axis_z, 2);
+		memcpy(new_rdesc + z_axis_offset + 2, rd + z_axis_offset,
+			*rsize - z_axis_offset);
+
+		*rsize = new_size;
+		_rdesc = new_rdesc;
 	}
 	return _rdesc;
 }
@@ -3810,6 +3873,9 @@ static u8 *hidpp_report_fixup(struct hid_device *hdev, u8 *rdesc,
 	    (hidpp->quirks & HIDPP_QUIRK_HIDPP_CONSUMER_VENDOR_KEYS))
 		rdesc = hidpp10_consumer_keys_report_fixup(hidpp, rdesc, rsize);
 
+	if (hdev->product == USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL)
+		rdesc = g_pro_axis_report_fixup(hdev, rdesc, rsize);
+
 	return rdesc;
 }
 
@@ -3841,6 +3907,7 @@ static int hidpp_input_setup_wheel(struct hid_device *hdev, struct hid_field *fi
 	if (usage->type == EV_ABS && (usage->code == ABS_X ||
 				usage->code == ABS_Y || usage->code == ABS_Z ||
 				usage->code == ABS_RZ)) {
+		hid_info(hdev, "Set usage->code %d\n", usage->code);
 		field->application = HID_GD_MULTIAXIS;
 	}
 	return 0;
