@@ -2794,7 +2794,7 @@ static ssize_t hidpp_ff_range_store(struct device *dev, struct device_attribute 
 	struct hidpp_ff_private_data *data = idev->ff->private;
 	u8 params[2];
 	int range = simple_strtoul(buf, NULL, 10);
-	
+
 	switch (hid->product) {
 	case USB_DEVICE_ID_LOGITECH_G_PRO_PC_WHEEL:
 	case USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL:
@@ -2802,7 +2802,7 @@ static ssize_t hidpp_ff_range_store(struct device *dev, struct device_attribute 
 		break;
 	default:
 		range = clamp(range, 180, 900);
-	}		
+	}
 
 	params[0] = range >> 8;
 	params[1] = range & 0x00FF;
@@ -2847,7 +2847,7 @@ static int hidpp_ff_init(struct hidpp_device *hidpp,
 	//   Try to find inputs on boot interface if we have ffb initialization
 	// not on the first interface (G Pro Wheel for example)
 	iface = to_usb_interface(hid->dev.parent);
-	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920 && 
+	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920 &&
 		iface->cur_altsetting->desc.bInterfaceNumber != 0)
 		hid = usb_get_intfdata(usb_ifnum_to_if(hid_to_usb_dev(hid), 0));
 
@@ -3509,7 +3509,7 @@ static int g920_get_config(struct hidpp_device *hidpp,
 		break;
 	default:
 		max_angle = 900;
-	}		
+	}
 
 	data->range = ret ?
 		max_angle : get_unaligned_be16(&response.fap.params[0]);
@@ -3698,7 +3698,7 @@ static u8 *hidpp10_consumer_keys_report_fixup(struct hidpp_device *hidpp,
 */
 static u8 *g_pro_axis_report_fixup(struct hid_device *hidpp, u8 *_rdesc,
 				     			unsigned int *rsize)
-{	
+{
 	u8 *new_rdesc;
 	unsigned int new_size = 103;
 
@@ -3710,7 +3710,7 @@ static u8 *g_pro_axis_report_fixup(struct hid_device *hidpp, u8 *_rdesc,
 	} else {
 		return _rdesc;
 	}
-	
+
 	/* Note Axis Z */
 	static const char axis_z[] = {
 		0x09, 0x32, // USAGE (Z)
@@ -3900,15 +3900,13 @@ static int hidpp_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 	return 0;
 }
 
-static int hidpp_input_setup_wheel(struct hid_device *hdev, struct hid_field *field, 
-		struct hid_usage *usage) 
+static int hidpp_input_setup_wheel(struct hid_device *hdev, struct hid_field *field,
+		struct hid_usage *usage)
 {
-	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920) {
-		if (usage->type == EV_ABS && (usage->code == ABS_X ||
-				usage->code == ABS_Y || usage->code == ABS_Z ||
-				usage->code == ABS_RZ)) {
-			field->application = HID_GD_MULTIAXIS;
-		}
+	if (usage->type == EV_ABS && (usage->code == ABS_X ||
+			usage->code == ABS_Y || usage->code == ABS_Z ||
+			usage->code == ABS_RZ)) {
+		field->application = HID_GD_MULTIAXIS;
 	}
 	return 0;
 }
