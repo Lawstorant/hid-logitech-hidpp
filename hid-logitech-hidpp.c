@@ -3904,11 +3904,12 @@ static int hidpp_input_setup_wheel(struct hid_device *hdev, struct hid_field *fi
 		struct hid_usage *usage) 
 {
 	hid_info(hdev, "Setup multiaxis on the wheel");
-	if (usage->type == EV_ABS && (usage->code == ABS_X ||
+	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920) {
+		if (usage->type == EV_ABS && (usage->code == ABS_X ||
 				usage->code == ABS_Y || usage->code == ABS_Z ||
 				usage->code == ABS_RZ)) {
-		hid_info(hdev, "Set usage->code %d\n", usage->code);
-		field->application = HID_GD_MULTIAXIS;
+			field->application = HID_GD_MULTIAXIS;
+		}
 	}
 	return 0;
 }
