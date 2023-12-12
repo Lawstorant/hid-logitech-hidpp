@@ -3903,7 +3903,6 @@ static int hidpp_input_mapping(struct hid_device *hdev, struct hid_input *hi,
 static int hidpp_input_setup_wheel(struct hid_device *hdev, struct hid_field *field, 
 		struct hid_usage *usage) 
 {
-	hid_info(hdev, "Setup multiaxis on the wheel");
 	if (hidpp->quirks & HIDPP_QUIRK_CLASS_G920) {
 		if (usage->type == EV_ABS && (usage->code == ABS_X ||
 				usage->code == ABS_Y || usage->code == ABS_Z ||
