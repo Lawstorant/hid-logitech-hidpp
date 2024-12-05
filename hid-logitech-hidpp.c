@@ -23,9 +23,17 @@
 #include <linux/workqueue.h>
 #include <linux/atomic.h>
 #include <linux/fixp-arith.h>
-#include <asm/unaligned.h>
+#include <linux/version.h>
 #include "usbhid/usbhid.h"
 #include "hid-ids.h"
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,12,0)
+#include <linux/unaligned.h>
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6,12,0)
+#include <asm/unaligned.h>
+#endif
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Benjamin Tissoires <benjamin.tissoires@gmail.com>");
@@ -3860,13 +3868,17 @@ static int hidpp_initialize_hires_scroll(struct hidpp_device *hidpp)
 /* Generic HID++ devices                                                      */
 /* -------------------------------------------------------------------------- */
 
-static u8 *hidpp_report_fixup(struct hid_device *hdev, u8 *rdesc,
+static 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,12,0)
+const
+#endif
+u8 *hidpp_report_fixup(struct hid_device *hdev, u8 *rdesc,
 			      unsigned int *rsize)
 {
 	struct hidpp_device *hidpp = hid_get_drvdata(hdev);
 
 	if (!hidpp)
-		return rdesc;
+            return rdesc;
 
 	/* For 27 MHz keyboards the quirk gets set after hid_parse. */
 	if (hdev->group == HID_GROUP_LOGITECH_27MHZ_DEVICE ||
