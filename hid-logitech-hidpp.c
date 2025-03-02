@@ -3868,21 +3868,21 @@ static int hidpp_initialize_hires_scroll(struct hidpp_device *hidpp)
 /* Generic HID++ devices                                                      */
 /* -------------------------------------------------------------------------- */
 
-static 
+static
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,12,0)
 const
 #endif
 u8 *hidpp_report_fixup(struct hid_device *hdev, u8 *rdesc,
-			      unsigned int *rsize)
+			unsigned int *rsize)
 {
 	struct hidpp_device *hidpp = hid_get_drvdata(hdev);
 
 	if (!hidpp)
-            return rdesc;
+		return rdesc;
 
 	/* For 27 MHz keyboards the quirk gets set after hid_parse. */
 	if (hdev->group == HID_GROUP_LOGITECH_27MHZ_DEVICE ||
-	    (hidpp->quirks & HIDPP_QUIRK_HIDPP_CONSUMER_VENDOR_KEYS))
+		(hidpp->quirks & HIDPP_QUIRK_HIDPP_CONSUMER_VENDOR_KEYS))
 		rdesc = hidpp10_consumer_keys_report_fixup(hidpp, rdesc, rsize);
 
 	if (hdev->product == USB_DEVICE_ID_LOGITECH_G_PRO_XBOX_WHEEL)
